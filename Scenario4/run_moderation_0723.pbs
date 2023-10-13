@@ -1,0 +1,16 @@
+#!/bin/bash
+### PBS -q short
+### PBS -l select=1:ncpus=1:mem=30GB
+#PBS -j oe
+#PBS -N simu_moderation_zinb_0723
+#PBS -q parallel20
+#PBS -l select=1:ncpus=20:mem=45GB
+
+cd $PBS_0_WORKDIR;
+source /etc/profile.d/rec_modules.sh
+module load miniconda
+source activate xqR01
+
+
+cd /home/svu/e0859926/offline_count/ZINB_three_p/
+R CMD BATCH run_simulation_moderation.R
