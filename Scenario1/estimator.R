@@ -923,3 +923,154 @@ ECE_NonP <- function(
               dims = list(p = p, q = q),
               f.root = solution$f.root))
 }
+
+G_est_Yu <- function(
+    dta,
+    id_varname,
+    decision_time_varname,
+    treatment_varname,
+    outcome_varname,
+    control_varname,
+    moderator_varname,
+    rand_prob_varname,
+    avail_varname = NULL,
+    estimator_initial_value = NULL
+)
+{
+  
+  sample_size <- length(unique(dta[, id_varname]))
+  total_person_decisionpoint <- nrow(dta)
+  time_length <- length(unique(dta[, decision_time_varname]))
+  if (is.null(avail_varname)) {
+    avail <- rep(1, total_person_decisionpoint)
+  } else {
+    avail <- dta[, avail_varname]
+  }
+  
+  A <- dta[, treatment_varname]
+  if (any(is.na(A[avail == 1]))) {
+    stop("Treatment indicator is NA where availability = 1.")
+  }
+  A[avail == 0] <- 0
+  
+  p_t <- dta[, rand_prob_varname]
+  cA <- A - p_t # centered A
+  Y <- dta[, outcome_varname]
+  Xdm <- as.matrix( cbind( rep(1, nrow(dta)), dta[, moderator_varname] ) ) # X (moderator) design matrix, intercept added
+  Zdm <- as.matrix( cbind( rep(1, nrow(dta)), dta[, control_varname] ) ) # Z (control) design matrix, intercept added
+  
+
+  p <- length(moderator_varname) + 1 # dimension of beta
+  q <- length(control_varname) + 1 # dimension of alpha
+  
+  Xnames <- c("Intercept", moderator_varname)
+  Znames <- c("Y","Intercept", control_varname)
+  
+  
+  ### estimation: nuisance parameter ###
+  df4 = data.frame(Y=as.vector(Y), Zdm)
+  colnames(df4) = Znames
+  df40 = df4[A==0,]
+  df40_prob = df40
+  df40_prob$ind = df40$Y > 0
+  df40_mean = df40[which(df40_prob$Y > 0),]
+  df41 = df4[A==1,]
+  df41_prob = df41
+  df41_prob$ind = df41$Y > 0
+  df41_mean = df41[which(df41_prob$Y > 0),]
+  
+  formula1 <- as.formula(paste0("ind", "~", "s(",paste0(control_varname, collapse = "+"), ",k=3)"))
+  formula2 <- as.formula(paste0("Y", "~", "s(",paste0(control_varname, collapse = "+"), ",k=3)"))
+  fit40_prob = gam(formula1, data=df40_prob, family = poisson(link='log'))
+  fit40_mean = gam(formula2, data=df40_mean, family = gaussian(link="log"))
+  fit41_prob = gam(formula1, data=df41_prob, family = poisson(link='log'))
+  fit41_mean = gam(formula2, data=df41_mean, family = gaussian(link="log"))
+  
+  EY1 = predict(fit41_prob, newdata=df4, type = "response") * predict(fit41_mean, newdata=df4, type = "response")
+  EY0 = predict(fit40_prob, newdata=df4, type = "response") * predict(fit40_mean, newdata=df4, type = "response")
+  
+  ### estimation equation###
+  
+  estimating_equation <- function(beta) {
+    exp_Xdm_beta <- exp(Xdm %*% beta)
+    exp_Zdm_alpha <- as.vector(EY0) * (1 - p_t) + as.vector(EY1) * p_t * exp_Xdm_beta^(-1)
+    exp_AXdm_beta <- exp(A * (Xdm %*% beta))
+    exp_negAXdm_beta <- exp_AXdm_beta^(-1)
+    exp_negXdm_beta <- exp_Xdm_beta^(-1)
+    
+    residual <- Y - exp_Zdm_alpha * exp_AXdm_beta
+    weight <- exp_negAXdm_beta
+    
+    ef <- rep(NA, length(beta)) # value of estimating function
+    for (i in 1:p) {
+      ef[i] <- sum( weight * residual * avail * cA * Xdm[, i])
+    }
+    ef <- ef / sample_size
+    return(ef)
+  }
+  
+  if (is.null(estimator_initial_value)) {
+    estimator_initial_value <- rep(0, length = p)
+  }
+  
+  solution <- tryCatch(
+    {
+      multiroot(estimating_equation, estimator_initial_value)
+    },
+    error = function(cond) {
+      message("\nCatched error in multiroot inside efficient_ee():")
+      message(cond)
+      return(list(root = rep(NaN, p), msg = cond,
+                  f.root = rep(NaN, p)))
+    })
+  
+  beta_hat <- solution$root
+  
+  ### asymptotic variance ###
+  
+  Sigman_summand <- array(NA, dim = c(total_person_decisionpoint, p, p))
+  Mn_summand <- array(NA, dim = c(total_person_decisionpoint, p, p))
+  
+  for (it in 1:total_person_decisionpoint) {  
+    # this is to make R code consistent whether X_it, Z_it contains more entries or is just the intercept.  
+    if (p == 1) {
+      Xbeta <- Xdm[it, ] * beta_hat
+    } else {
+      Xbeta <- as.numeric(Xdm[it, ] %*% beta_hat)
+    }
+    
+    W1 <- exp(- A[it] * Xbeta)
+    W3 <- - A[it]
+    
+    # partialD_partialtheta = \frac{\partial D^{(t),T}}{\partial \theta^T}, matrix of dim (p+q)*(p+q)
+    partialD_partialtheta <- matrix(NA, nrow = p, ncol = p)
+    partialD_partialtheta[(1):(p), (1):(p)] <- W1 * W3 * cA[it] * (Xdm[it, ] %o% Xdm[it, ])
+    
+    # r_term = r^(t) (scalar)
+    EH <- EY0[it] * (1 - p_t[it]) + EY1[it] * p_t[it] * exp(-Xbeta)
+    r_term <- (Y[it] - EH * exp(A[it] * Xbeta)) * avail[it]
+
+    # D_term = D^{(t),T} (vector of length (p+q))
+    D_term <- exp(- A[it] * Xbeta) * cA[it] * Xdm[it, ]
+
+    # partialr_partialtheta = \frac{\partial r^(t)}{\partial \theta^T} (vector of length (p+q))
+    partialr_partialtheta <- - EH * exp(A[it] * Xbeta) * A[it] * Xdm[it, ] * avail[it]
+
+    Mn_summand[it, , ] <- partialD_partialtheta * r_term + D_term %o% partialr_partialtheta
+    Sigman_summand[it, , ] <- (D_term * r_term) %*% (r_term * t(D_term))
+  }
+  Mn <- apply(Mn_summand, c(2,3), sum) / sample_size / time_length
+  Mn_inv <- solve(Mn)
+  Sigman <- apply(Sigman_summand, c(2,3), sum) / sample_size / time_length
+   
+  varcov <- Mn_inv %*% Sigman %*% t(Mn_inv) / sample_size / time_length
+  beta_se <- sqrt(diag(varcov)[(1):(p)])
+
+  names(beta_hat) <- names(beta_se) <- Xnames
+  
+  return(list(beta_hat = beta_hat, 
+              beta_se = beta_se, 
+              varcov = varcov,
+              dims = list(p = p, q = q),
+              f.root = solution$f.root))
+}
