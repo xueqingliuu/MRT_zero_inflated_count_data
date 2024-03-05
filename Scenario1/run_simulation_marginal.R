@@ -58,6 +58,18 @@ for (i_ss in 1:length(total_Ts)) {
         rand_prob_varname = "prob_A",
         estimator_initial_value = NULL
       )
+
+        G_est_Yu <- fit_G_est_Yu(
+        dta = dta,
+        id_varname = "userid",
+        decision_time_varname = "day",
+        treatment_varname = "A",
+        outcome_varname = "Y",
+        control_varname = control_vars,
+        moderator_varname = moderator_vars,
+        rand_prob_varname = "prob_A",
+        estimator_initial_value = NULL
+      )
       
       EMEE <- fit_EMEE(
         dta = dta,
@@ -124,20 +136,20 @@ for (i_ss in 1:length(total_Ts)) {
         estimator_initial_value = NULL,
         corstr = "exchangeable"
       )
-      output <- list(list(ECE = ECE, ECE_NonP = ECE_NonP, EMEE = EMEE, 
+      output <- list(list(ECE = ECE, ECE_NonP = ECE_NonP, G_est_Yu = G_est_Yu, EMEE = EMEE, 
                           EMEE_NonP = EMEE_NonP, DR_EMEE_NonP = DR_EMEE_NonP, 
                           GEE_IND = GEE_IND, GEE_EXCH = GEE_EXCH))
   }
   
   
-  ee_names <- c("ECE", "ECE_NonP", "EMEE", "EMEE_NonP", "DR_EMEE_NonP", "GEE_IND", "GEE_EXCH")
+  ee_names <- c("ECE", "ECE_NonP", "G_est_Yu", "EMEE", "EMEE_NonP", "DR_EMEE_NonP", "GEE_IND", "GEE_EXCH")
   beta_names <- c("Intercept", moderator_vars)
   num_estimator <- length(ee_names)
   
-  beta <- simplify2array(lapply(result, function(l) matrix(c(l$ECE$beta_hat, l$ECE_NonP$beta_hat, l$EMEE$beta_hat, l$EMEE_NonP$beta_hat,
+  beta <- simplify2array(lapply(result, function(l) matrix(c(l$ECE$beta_hat, l$ECE_NonP$beta_hat, l$G_est_Yu$beta_hat, l$EMEE$beta_hat, l$EMEE_NonP$beta_hat,
                                                              l$DR_EMEE_NonP$beta_hat, l$GEE_IND$beta_hat, l$GEE_EXCH$beta_hat),
                                                            nrow = length(ee_names), byrow = TRUE, dimnames = list(ee_names, beta_names))))
-  beta_se <- simplify2array(lapply(result, function(l) matrix(c(l$ECE$beta_se, l$ECE_NonP$beta_se, l$EMEE$beta_se, l$EMEE_NonP$beta_se, 
+  beta_se <- simplify2array(lapply(result, function(l) matrix(c(l$ECE$beta_se, l$ECE_NonP$beta_se, l$G_est_Yu$beta_se, l$EMEE$beta_se, l$EMEE_NonP$beta_se, 
                                                                 l$DR_EMEE_NonP$beta_se, l$GEE_IND$beta_se, l$GEE_EXCH$beta_se),
                                                               nrow = length(ee_names), byrow = TRUE, dimnames = list(ee_names, beta_names))))
 
