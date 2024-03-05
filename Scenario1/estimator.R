@@ -559,7 +559,7 @@ fit_DR_EMEE_NonP <- function(
               f.root = solution$f.root))
 }
 
-log_linear_GEE_geepack <- function(
+fit_log_linear_GEE_geepack <- function(
     dta,
     id_varname,
     decision_time_varname,
@@ -769,7 +769,7 @@ fit_ECE <- function(
               f.root = solution$f.root))
 }
 
-ECE_NonP <- function(
+fit_ECE_NonP <- function(
     dta,
     id_varname,
     decision_time_varname,
@@ -924,7 +924,7 @@ ECE_NonP <- function(
               f.root = solution$f.root))
 }
 
-G_est_Yu <- function(
+fit_G_est_Yu <- function(
     dta,
     id_varname,
     decision_time_varname,
