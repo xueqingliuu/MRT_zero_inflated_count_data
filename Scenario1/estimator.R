@@ -559,7 +559,7 @@ fit_DR_EMEE_NonP <- function(
               f.root = solution$f.root))
 }
 
-fit_log_linear_GEE_geepack <- function(
+log_linear_GEE_geepack <- function(
     dta,
     id_varname,
     decision_time_varname,
