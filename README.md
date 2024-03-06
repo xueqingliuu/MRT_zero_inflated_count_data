@@ -11,9 +11,9 @@ As described in Section 5, we have four simulation scenarios. Under each scenari
 
 -`other_functions.R` contains some functions used in the above files
 
--`run_simulation_marginal` is the main file to perform the simulation for marginal causal effects
+-`run_simulation_marginal.R` is the main file to perform the simulation for marginal causal effects
 
--`run_simulation_moderation` is the main file to perform the simulation for fully conditional causal effects
+-`run_simulation_moderation.R` is the main file to perform the simulation for fully conditional causal effects
 
 
 ## Drink Less Data Analysis
