@@ -391,9 +391,9 @@ fit_EMEE_NonP <- function(
     
     # partialD_partialtheta = \frac{\partial D^{(t),T}}{\partial \theta^T}, matrix of dim (p+q)*(p+q)
     partialD_partialtheta <- matrix(NA, nrow =  2 * p, ncol = 2 * p)
-    partialD_partialtheta[1:p, 1:p] <- -pre_multiplier * A1[it] * cA_tilde1[it] * (Xdm[it, ] %o% Xdm[it, ])
-    partialD_partialtheta[1:p, (p + 1):(2*p)] <- 0
-    partialD_partialtheta[(p + 1):(2*p), 1:p] <- 0
+    partialD_partialtheta[1:p, 1:p] <- -pre_multiplier * A1[it] * cA_tilde1[it] * (Xdm[it, ] %o% Xdm[it, ]
+    partialD_partialtheta[1:p, (p + 1):(2*p)] <- -pre_multiplier * A2[it] * cA_tilde1[it] * (Xdm[it, ] %o% Xdm[it, ])
+    partialD_partialtheta[(p + 1):(2*p), 1:p] <- -pre_multiplier * A1[it] * cA_tilde2[it] * (Xdm[it, ] %o% Xdm[it, ])
     partialD_partialtheta[(p + 1):(2*p), (p + 1):(2*p)] <- -pre_multiplier * A2[it] * cA_tilde2[it] * (Xdm[it, ] %o% Xdm[it, ])
     
     # r_term = r^(t) (scalar)
@@ -596,8 +596,8 @@ fit_DR_EMEE_NonP <- function(
     # partialD_partialtheta = \frac{\partial D^{(t),T}}{\partial \theta^T}, matrix of dim (p+q)*(p+q)
     partialD_partialtheta <- matrix(NA, nrow =  2 * p, ncol = 2 * p)
     partialD_partialtheta[1:p, 1:p] <- -pre_multiplier * A1[it] * cA_tilde1[it] * (Xdm[it, ] %o% Xdm[it, ])
-    partialD_partialtheta[1:p, (p + 1):(2*p)] <- 0
-    partialD_partialtheta[(p + 1):(2*p), 1:p] <- 0
+    partialD_partialtheta[1:p, (p + 1):(2*p)] <- -pre_multiplier * A2[it] * cA_tilde1[it] * (Xdm[it, ] %o% Xdm[it, ])
+    partialD_partialtheta[(p + 1):(2*p), 1:p] <- -pre_multiplier * A1[it] * cA_tilde2[it] * (Xdm[it, ] %o% Xdm[it, ])
     partialD_partialtheta[(p + 1):(2*p), (p + 1):(2*p)] <- -pre_multiplier * A2[it] * cA_tilde2[it] * (Xdm[it, ] %o% Xdm[it, ])
 
     # r_term = r^(t) (scalar)
