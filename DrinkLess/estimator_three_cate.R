@@ -601,8 +601,8 @@ fit_DR_EMEE_NonP <- function(
     partialD_partialtheta[(p + 1):(2*p), (p + 1):(2*p)] <- -pre_multiplier * A2[it] * cA_tilde2[it] * (Xdm[it, ] %o% Xdm[it, ])
 
     # r_term = r^(t) (scalar)
-    EH <- EY0[it] * (1 - A1[it] - A2[it]) + EY1[it] * A1[it] + EY2[it] * A2[it]
-    r_term <- (Y[it] - EH) * avail[it]
+    EH <- EY0[it] * (1 - A1[it] - A2[it]) + EY1[it] * A1[it] * exp(-Xbeta[1]) + EY2[it] * A2[it] * exp(-Xbeta[2])
+    r_term <- (Y[it] - EH * exp(A1[it] * Xbeta[1] + A2[it] * Xbeta[2])) * avail[it]
 
     # # D_term = D^{(t),T} (dim = (p) * 1)
     D_term <- pre_multiplier * c(cA_tilde1[it] * Xdm[it, ], cA_tilde2[it] * Xdm[it, ])
