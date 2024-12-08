@@ -178,8 +178,8 @@ fit_EMEE <- function(
     partialD_partialtheta[1:q, (q + p + 1):(q + 2*p)] <- -pre_multiplier * A2[it] * (Zdm[it, ] %o% Xdm[it, ])
     partialD_partialtheta[(q + 1):(q + 2*p), 1:q] <- 0
     partialD_partialtheta[(q + 1):(q + p), (q + 1):(q + p)] <- -pre_multiplier * A1[it] * cA_tilde1[it] * (Xdm[it, ] %o% Xdm[it, ])
-    partialD_partialtheta[(q + 1):(q + p), (q + p + 1):(q + 2*p)] <- 0
-    partialD_partialtheta[(q + p + 1):(q + 2*p), (q + 1):(q + p)] <- 0
+    partialD_partialtheta[(q + 1):(q + p), (q + p + 1):(q + 2*p)] <- -pre_multiplier * A2[it] * cA_tilde1[it] * (Xdm[it, ] %o% Xdm[it, ])
+    partialD_partialtheta[(q + p + 1):(q + 2*p), (q + 1):(q + p)] <- -pre_multiplier * A1[it] * cA_tilde2[it] * (Xdm[it, ] %o% Xdm[it, ])
     partialD_partialtheta[(q + p + 1):(q + 2*p), (q + p + 1):(q + 2*p)] <- -pre_multiplier * A2[it] * cA_tilde2[it] * (Xdm[it, ] %o% Xdm[it, ])
     
     # r_term = r^(t) (scalar)
