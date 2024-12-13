@@ -404,8 +404,9 @@ fit_EMEE_NonP <- function(
     D_term <- pre_multiplier * c(cA_tilde1[it] * Xdm[it, ], cA_tilde2[it] * Xdm[it, ])
     
     # partialr_partialtheta = \frac{\partial r^(t)}{\partial \theta^T}
-    partialr_partialtheta <- EY1[it] * p_t_tilde1[it] * exp(-Xbeta[1]) * exp(A1[it] * Xbeta[1]+ A2[it] * Xbeta[2]) * avail[it] * Xdm[it, ] +  EY2[it] * p_t_tilde2[it] * exp(-Xbeta[2]) * exp(A1[it] * Xbeta[1]+ A2[it] * Xbeta[2]) * avail[it] * Xdm[it, ]  - EH * exp(A1[it] * Xbeta[1]+ A2[it] * Xbeta[2]) * c(A1[it] * Xdm[it, ], A2[it] * Xdm[it, ]) * avail[it]
-    
+    partialr_partialtheta <-  exp(A1[it] * Xbeta[1]+ A2[it] * Xbeta[2]) * avail[it] * 
+                              c(exp(-Xbeta[1]) * EY1[it] * p_t_tilde1[it] *Xdm[it, ], EY2[it] * p_t_tilde2[it] * exp(-Xbeta[2]) * Xdm[it, ]) 
+                              - EH * exp(A1[it] * Xbeta[1]+ A2[it] * Xbeta[2]) * c(A1[it] * Xdm[it, ], A2[it] * Xdm[it, ]) * avail[it]
     Mn_summand[it, , ] <- partialD_partialtheta * r_term + D_term %o% partialr_partialtheta
     
     Sigman_summand[it, , ] <- (D_term * r_term) %*% (r_term * t(D_term))
